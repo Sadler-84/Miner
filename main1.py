@@ -16,7 +16,6 @@ class Board:
         self.top = top
         self.cell_size = cell_size
 
-
     def get_cell(self, mouse_pos):
         x, y = mouse_pos
         cell_x = (x - self.left) // self.cell_size
@@ -29,17 +28,14 @@ class Board:
 
     def on_click(self, cell_coords):
         x, y = cell_coords
-        summ = 0
-
-        for i in range(y - 1, y + 2):
-            for j in range(x - 1, x + 2):
-                if 0 <= i < self.height and 0 <= j < self.width:
-                    if self.board[i][j] == 10:
-                        summ += 1
-        self.board[y][x] = summ
-        print(summ)
-
-
+        if self.board[y][x] != 10:
+            summ = 0
+            for i in range(y - 1, y + 2):
+                for j in range(x - 1, x + 2):
+                    if 0 <= i < self.height and 0 <= j < self.width:
+                        if self.board[i][j] == 10:
+                            summ += 1
+            self.board[y][x] = summ
 
     def get_click(self, mouse_pos):
         cell_coords = self.get_cell(mouse_pos)
@@ -47,7 +43,6 @@ class Board:
             self.on_click(cell_coords)
 
     def render(self, screen):
-        screen.fill((0, 0, 0))
         for y in range(self.height):
             for x in range(self.width):
                 rect = pygame.Rect(
@@ -58,13 +53,29 @@ class Board:
                 )
                 pygame.draw.rect(screen, (255, 255, 255), rect, 1)
 
+                # Отрисовка мин
+                if self.board[y][x] == 10:
+                    mine_rect = pygame.Rect(
+                        self.left + x * self.cell_size + 1,
+                        self.top + y * self.cell_size + 1,
+                        self.cell_size - 2,
+                        self.cell_size - 2
+                    )
+                    pygame.draw.rect(screen, (255, 0, 0), mine_rect)
+                # Отрисовка чисел (если клетка открыта и не мина)
+                elif self.board[y][x] != -1:
+                    font = pygame.font.Font(None, 36)
+                    text_surface = font.render(str(self.board[y][x]), True, (255, 100, 100))
+                    text_x = self.left + x * self.cell_size + (self.cell_size // 4)
+                    text_y = self.top + y * self.cell_size + (self.cell_size // 4)
+                    screen.blit(text_surface, (text_x, text_y))
+
 
 class Minesweeper(Board):
     def __init__(self, width, height, mines):
         super().__init__(width, height)
         self.mines = mines
         self.make_random_mines()
-
 
     def make_random_mines(self):
         for i in range(self.mines):
@@ -76,20 +87,10 @@ class Minesweeper(Board):
                     self.board[random_y][random_x] = 10
                     break
 
-    def render(self, screen):
-        super().render(screen)
-
-        for y in range(self.height):
-            for x in range(self.width):
-                if self.board[y][x] == 10:
-                    rect = pygame.Rect(
-                        self.left + x * self.cell_size + 1,
-                        self.top + y * self.cell_size + 1,
-                        self.cell_size - 2,
-                        self.cell_size - 2
-                    )
-                    pygame.draw.rect(screen, (255, 0, 0), rect)
-
+    def open_cell(self, pos):
+        cell_coords = self.get_cell(pos)
+        if cell_coords:
+            self.on_click(cell_coords)
 
 
 if __name__ == "__main__":
@@ -106,7 +107,7 @@ if __name__ == "__main__":
                 running = False
             if event.type == pygame.MOUSEBUTTONDOWN:
                 pos = event.pos
-                minesweeper.get_click(pos)
+                minesweeper.open_cell(pos)
 
         screen.fill((0, 0, 0))
         minesweeper.render(screen)
