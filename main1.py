@@ -28,14 +28,27 @@ class Board:
 
     def on_click(self, cell_coords):
         x, y = cell_coords
-        if self.board[y][x] != 10:
-            summ = 0
+        if self.board[y][x] == 10:
+            return
+
+        if self.board[y][x] != -1:
+            return
+        summ = 0
+        for i in range(y - 1, y + 2):
+            for j in range(x - 1, x + 2):
+                if 0 <= i < self.height and 0 <= j < self.width:
+                    if self.board[i][j] == 10:
+                        summ += 1
+
+        self.board[y][x] = summ
+
+        if summ == 0:
             for i in range(y - 1, y + 2):
                 for j in range(x - 1, x + 2):
                     if 0 <= i < self.height and 0 <= j < self.width:
-                        if self.board[i][j] == 10:
-                            summ += 1
-            self.board[y][x] = summ
+                        if self.board[i][j] == -1:
+                            self.on_click((j, i))
+
 
     def get_click(self, mouse_pos):
         cell_coords = self.get_cell(mouse_pos)
@@ -95,10 +108,10 @@ class Minesweeper(Board):
 
 if __name__ == "__main__":
     pygame.init()
-    screen = pygame.display.set_mode((400, 400))
+    screen = pygame.display.set_mode((700, 700))
 
-    minesweeper = Minesweeper(5, 5, 5)
-    minesweeper.set_view(25, 25, 70)
+    minesweeper = Minesweeper(15, 15, 15)
+    minesweeper.set_view(25, 25, 30)
 
     running = True
     while running:
